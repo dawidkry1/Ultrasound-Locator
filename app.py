@@ -7,13 +7,21 @@ from datetime import datetime
 def init_db():
     conn = sqlite3.connect('ultrasound_tracker.db')
     c = conn.cursor()
-    # Added 'device_name' to differentiate between the two units
+    # Create table if it doesn't exist
     c.execute('''CREATE TABLE IF NOT EXISTS movements 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   device_name TEXT,
                   location TEXT, 
                   user_identity TEXT, 
                   timestamp DATETIME)''')
+    
+    # --- SAFETY MIGRATION ---
+    # This checks if 'device_name' exists; if not, it adds it to your existing DB
+    c.execute("PRAGMA table_info(movements)")
+    columns = [column[1] for column in c.fetchall()]
+    if 'device_name' not in columns:
+        c.execute("ALTER TABLE movements ADD COLUMN device_name TEXT DEFAULT 'Black Ultrasound'")
+    
     conn.commit()
     conn.close()
 
@@ -29,13 +37,19 @@ def add_entry(device, location, user):
 def get_latest_status(device):
     conn = sqlite3.connect('ultrasound_tracker.db')
     query = "SELECT location, user_identity, timestamp FROM movements WHERE device_name = ? ORDER BY id DESC LIMIT 1"
-    df = pd.read_sql_query(query, conn, params=(device,))
+    try:
+        df = pd.read_sql_query(query, conn, params=(device,))
+    except:
+        df = pd.DataFrame()
     conn.close()
     return df
 
 def get_full_history():
     conn = sqlite3.connect('ultrasound_tracker.db')
-    df = pd.read_sql_query("SELECT device_name, timestamp, location, user_identity FROM movements ORDER BY id DESC", conn)
+    try:
+        df = pd.read_sql_query("SELECT device_name, timestamp, location, user_identity FROM movements ORDER BY id DESC", conn)
+    except:
+        df = pd.DataFrame()
     conn.close()
     return df
 
@@ -71,7 +85,9 @@ with col_black:
     if not status_black.empty:
         curr = status_black.iloc[0]
         st.metric("Current Location", curr['location'])
-        st.caption(f"Last moved: {curr['timestamp'].split()[1][:5]} by {curr['user_identity']}")
+        # Added a check to handle potential formatting issues during migration
+        time_display = curr['timestamp'].split()[1][:5] if " " in curr['timestamp'] else curr['timestamp']
+        st.caption(f"Last moved: {time_display} by {curr['user_identity']}")
     else:
         st.info("No data for Black Ultrasound")
 
@@ -82,7 +98,8 @@ with col_white:
     if not status_white.empty:
         curr = status_white.iloc[0]
         st.metric("Current Location", curr['location'])
-        st.caption(f"Last moved: {curr['timestamp'].split()[1][:5]} by {curr['user_identity']}")
+        time_display = curr['timestamp'].split()[1][:5] if " " in curr['timestamp'] else curr['timestamp']
+        st.caption(f"Last moved: {time_display} by {curr['user_identity']}")
     else:
         st.info("No data for White Ultrasound")
 
