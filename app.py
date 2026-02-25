@@ -116,7 +116,8 @@ with st.form("location_form", clear_on_submit=True):
     with f_col1:
         submit = st.form_submit_button("Check-Out to New Location")
     with f_col2:
-        return_to_base = st.form_submit_button("🏠 Quick Return to Reception")
+        # Label updated as requested
+        return_to_base = st.form_submit_button("Return to AMU")
 
     if submit:
         # Check-out requires details
@@ -128,8 +129,8 @@ with st.form("location_form", clear_on_submit=True):
             st.error("Please provide both a Destination and your Name/Bleep for Check-Out.")
 
     if return_to_base:
-        # Return allows empty name, defaults to "System (Quick Return)"
-        caller = staff_name if staff_name else "System (Quick Return)"
+        # Return allows empty name, defaults to "System (Return)"
+        caller = staff_name if staff_name else "System (Return)"
         add_entry(device_to_move, "AMU Reception (Base)", caller)
         st.success(f"{device_to_move} returned to base!")
         st.rerun()
