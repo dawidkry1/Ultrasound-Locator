@@ -70,7 +70,7 @@ hide_st_style = """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Header
-st.title("🩺 AMU Dual Ultrasound Locator")
+st.title("🩺 AMU Ultrasound Locator")
 st.markdown("Track the **Black** and **White** ultrasound units across the department.")
 st.markdown("---")
 
