@@ -71,7 +71,7 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Header
 st.title("🩺 AMU Ultrasound Locator")
-st.markdown("Track the **Black** and **White** ultrasound units across the department.")
+st.markdown("Track the **Black** and **White** ultrasound units across the hospital.")
 st.markdown("---")
 
 # 1. CURRENT STATUS SECTION (Side-by-Side)
