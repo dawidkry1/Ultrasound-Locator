@@ -16,7 +16,6 @@ def init_db():
                   timestamp DATETIME)''')
     
     # --- SAFETY MIGRATION ---
-    # This checks if 'device_name' exists; if not, it adds it to your existing DB
     c.execute("PRAGMA table_info(movements)")
     columns = [column[1] for column in c.fetchall()]
     if 'device_name' not in columns:
@@ -85,7 +84,6 @@ with col_black:
     if not status_black.empty:
         curr = status_black.iloc[0]
         st.metric("Current Location", curr['location'])
-        # Added a check to handle potential formatting issues during migration
         time_display = curr['timestamp'].split()[1][:5] if " " in curr['timestamp'] else curr['timestamp']
         st.caption(f"Last moved: {time_display} by {curr['user_identity']}")
     else:
@@ -112,29 +110,29 @@ with st.form("location_form", clear_on_submit=True):
     device_to_move = st.radio("Which device are you moving?", ["Black Ultrasound", "White Ultrasound"], horizontal=True)
     
     new_loc = st.text_input("Destination (e.g., Coleridge, RSU, Side Room 2)")
-    staff_name = st.text_input("Your Name / Bleep")
+    staff_name = st.text_input("Your Name / Bleep (Required for Check-Out)")
     
     f_col1, f_col2 = st.columns(2)
     with f_col1:
         submit = st.form_submit_button("Check-Out to New Location")
     with f_col2:
-        return_to_base = st.form_submit_button("Return to AMU Reception")
+        return_to_base = st.form_submit_button("🏠 Quick Return to Reception")
 
     if submit:
+        # Check-out requires details
         if new_loc and staff_name:
             add_entry(device_to_move, new_loc, staff_name)
             st.success(f"{device_to_move} updated to {new_loc}")
             st.rerun()
         else:
-            st.error("Please fill in both fields.")
+            st.error("Please provide both a Destination and your Name/Bleep for Check-Out.")
 
     if return_to_base:
-        if staff_name:
-            add_entry(device_to_move, "AMU Reception (Base)", staff_name)
-            st.success(f"{device_to_move} returned to base!")
-            st.rerun()
-        else:
-            st.error("Please enter your Name/Bleep.")
+        # Return allows empty name, defaults to "System (Quick Return)"
+        caller = staff_name if staff_name else "System (Quick Return)"
+        add_entry(device_to_move, "AMU Reception (Base)", caller)
+        st.success(f"{device_to_move} returned to base!")
+        st.rerun()
 
 # 3. AUDIT TRAIL (Combined History)
 st.markdown("---")
